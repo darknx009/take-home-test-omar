@@ -1,6 +1,9 @@
-﻿namespace Fundo.Applications.WebApi.Controllers;
+﻿using Microsoft.AspNetCore.Authorization;
+
+namespace Fundo.Applications.WebApi.Controllers;
 
 [Route("/loans")]
+[Authorize]
 public class LoanManagementController : Controller
 {
     private readonly LoanManagementService _loanService;

@@ -1,4 +1,8 @@
-﻿using Microsoft.OpenApi.Models;
+﻿using System.Text;
+using Fundo.Applications.WebApi.Settings;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,26 +14,51 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<LoanManagementService>();
 builder.Services.AddScoped<ILoanRepository, LoanRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+
 builder.Services.AddCors(options =>
     {
-        options.AddPolicy("AllowAll", builder =>
-            builder.AllowAnyOrigin()
-                   .AllowAnyMethod()
-                   .AllowAnyHeader());
+        options.AddPolicy("AllowAngular",
+            builder =>
+            {
+                builder.WithOrigins("http://localhost:4200")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+            });
     });
 
-/*builder.Services.AddAuthentication("Bearer")
-    .AddJwtBearer("Bearer", options =>
+
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+builder.Services.AddSingleton(jwtSettings);
+builder.Services.AddSingleton<JwtTokenGeneratorService>();
+
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = false,
-            ValidateAudience = false,
+            ValidateIssuer = true,
+            ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("YourSuperSecretKey"))
+            ValidIssuer = jwtSettings.Issuer,
+            ValidAudience = jwtSettings.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret))
         };
-    });*/
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = context =>
+            {
+                Console.WriteLine("AUTH FAILED: " + context.Exception.Message);
+                return Task.CompletedTask;
+            }
+        };
+    });
+
+
 builder.Services.AddLogging(logging =>
 {
     logging.ClearProviders();
@@ -50,7 +79,7 @@ app.UseSwaggerUI(options =>
 });
 
 //app.UseAuthentication();
-app.UseCors("AllowAll");
+app.UseCors("AllowAngular");
 app.UseAuthorization();
 app.MapControllers();
 
