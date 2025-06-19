@@ -1,8 +1,8 @@
-## **Instructions**
-
+## **Instructions**. 
+  
 1.   Execute Docker Compose to create DB and Expose API in a Docker Container
-2.   Navigate to backend/src/Fundo.Applications.WebApi and execute below command on the terminal
-       docker-compose up --build
+2.   Navigate to backend/src/Fundo.Applications.WebApi and execute below command on the terminal. 
+       docker-compose up --build  
        Docker containers will be created for SQL Server instance and the We API ready-to-use on Postman (or similar tool).
        Swagger it is available at http://localhost:5050/swagger/index.html
        The Docker container can be used for testing the API and Angular app, locally. Therefore, it is not required to Install MS SQL Server, on the development machine.
